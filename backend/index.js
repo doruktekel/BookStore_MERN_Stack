@@ -1,102 +1,35 @@
 import express from "express";
 import mongoose from "mongoose";
 import { PORT, dBURL } from "./config.js";
-import { Book } from "./models/bookModel.js";
+import booksRoute from "./routes/bookRoute.js";
+import cors from "cors";
 
 const app = express();
 
+/// MIDDLEWARE for parsing request body
+
 app.use(express.json());
 
-/// Routes
+/// MIDDLEWARE for cors
+/// 1.WAY Allow all origins
+app.use(cors());
+/// 2.WAY Allow all origins
+// app.use(
+//   cors({
+//     origin: "http://localhost:3000",
+//     methods: ["POST", "GET", "DELETE", "PUT"],
+//     allowedHeaders: ["Content-Type"],
+//   })
+// );
 
 app.get("/", (req, res) => {
   console.log(req);
   res.status(234).send("welcomme bookstore api");
 });
 
-/// Create New Book Routes
+/// Routes
 
-app.post("/books", async (req, res) => {
-  try {
-    if (!req.body.author || !req.body.title || !req.body.publishYear) {
-      return res.status(400).send({ message: "Fill all required fields !" });
-    }
-    const newBook = {
-      author: req.body.author,
-      title: req.body.title,
-      publishYear: req.body.publishYear,
-    };
-
-    const book = await Book.create(newBook);
-    res.status(201).send(book);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-/// Get All Book Routes
-
-app.get("/books", async (req, res) => {
-  try {
-    const books = await Book.find({});
-    return res.status(200).json({
-      count: books.length,
-      data: books,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-/// Get Book By id Routes
-
-app.get("/books/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const book = await Book.findById(id);
-    res.status(200).json(book);
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-/// Update Book By id Routes
-
-app.put("/books/:id", async (req, res) => {
-  try {
-    if (!req.body.title || !req.body.publishYear || !req.body.author) {
-      return res.status(400).send({ message: "Fill all required fields !" });
-    }
-    const { id } = req.params;
-    const updatedBook = await Book.findByIdAndUpdate(id, req.body);
-    if (!updatedBook) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-    res.status(200).json({ message: "Book was updated succesfully" });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-/// Delete Book By id Routes
-
-app.delete("/books/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleteBook = await Book.findByIdAndDelete(id);
-    if (!deleteBook) {
-      return res.status(404).json({ message: "This book is couldn't find !" });
-    }
-    res.status(200).json({ message: "Book was deleted succesfully" });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.mess });
-  }
-});
+app.use("/books", booksRoute);
 
 /// dB Connection & Port Listening
 
